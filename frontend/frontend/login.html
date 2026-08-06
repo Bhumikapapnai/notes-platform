@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Notes Platform - Login</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        background: #f4f4f4;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        margin: 0;
+    }
+    .box {
+        background: white;
+        padding: 30px;
+        border-radius: 8px;
+        box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        width: 300px;
+    }
+    input {
+        width: 100%;
+        padding: 8px;
+        margin: 8px 0;
+        box-sizing: border-box;
+    }
+    button {
+        width: 100%;
+        padding: 10px;
+        background: #4CAF50;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        margin-top: 10px;
+    }
+    button:hover {
+        background: #45a049;
+    }
+    #message {
+        margin-top: 10px;
+        color: red;
+        font-size: 14px;
+    }
+    .toggle {
+        text-align: center;
+        margin-top: 10px;
+        font-size: 14px;
+        color: #4CAF50;
+        cursor: pointer;
+    }
+</style>
+</head>
+<body>
+
+<div class="box">
+    <h2 id="formTitle">Login</h2>
+
+    <!-- signup ke liye extra field, login mein hide rahega -->
+    <input type="text" id="nameField" placeholder="Full Name" style="display:none;">
+
+    <input type="email" id="email" placeholder="Email">
+    <input type="password" id="password" placeholder="Password">
+
+    <button onclick="handleSubmit()">Login</button>
+
+    <div id="message"></div>
+
+    <div class="toggle" onclick="toggleForm()">
+        New here? Signup instead
+    </div>
+</div>
+
+<script>
+    // yaha apna backend ka URL daalo (jo port use kar rahi ho)
+    const API_URL = "http://127.0.0.1:8080";
+
+    let isLoginMode = true;
+
+    function toggleForm() {
+        isLoginMode = !isLoginMode;
+        document.getElementById("formTitle").innerText = isLoginMode ? "Login" : "Signup";
+        document.getElementById("nameField").style.display = isLoginMode ? "none" : "block";
+        document.querySelector("button").innerText = isLoginMode ? "Login" : "Signup";
+        document.querySelector(".toggle").innerText = isLoginMode ? "New here? Signup instead" : "Already have an account? Login";
+        document.getElementById("message").innerText = "";
+    }
+
+    async function handleSubmit() {
+      try {
+        const email = document.getElementById("email").value;
+        const password = document.getElementById("password").value;
+        const messageBox = document.getElementById("message");
+
+        if (isLoginMode) {
+            // LOGIN ka logic
+            const formData = new URLSearchParams();
+            formData.append("username", email);
+            formData.append("password", password);
+
+            const response = await fetch(`${API_URL}/login`, {
+                method: "POST",
+                headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                body: formData
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                // token ko browser mein save kar do, taaki agli pages pe use ho sake
+                localStorage.setItem("token", data.access_token);
+                messageBox.style.color = "green";
+                messageBox.innerText = "Login successful! Redirecting...";
+                setTimeout(() => {
+                    window.location.href = "resources.html";
+                }, 1000);
+            } else {
+                messageBox.style.color = "red";
+                messageBox.innerText = data.detail || "Login failed";
+            }
+
+        } else {
+            // SIGNUP ka logic
+            const name = document.getElementById("nameField").value;
+
+            const response = await fetch(`${API_URL}/signup`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ name, email, password })
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                messageBox.style.color = "green";
+                messageBox.innerText = "Signup successful! Please login now.";
+                toggleForm(); // wapas login mode mein le aao
+            } else {
+                messageBox.style.color = "red";
+                messageBox.innerText = data.detail || "Signup failed";
+            }
+        }
+      } catch (error) {
+        alert("JS ERROR: " + error.message);
+      }
+    }
+</script>
+
+</body>
+</html>

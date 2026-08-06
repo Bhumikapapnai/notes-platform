@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Notes Platform - Upload</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        background: #f4f4f4;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        margin: 0;
+    }
+    .box {
+        background: white;
+        padding: 30px;
+        border-radius: 8px;
+        box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        width: 350px;
+    }
+    input, select {
+        width: 100%;
+        padding: 8px;
+        margin: 8px 0;
+        box-sizing: border-box;
+    }
+    button {
+        width: 100%;
+        padding: 10px;
+        background: #4CAF50;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        margin-top: 10px;
+    }
+    button:hover {
+        background: #45a049;
+    }
+    .back-btn {
+        background: #999;
+        margin-top: 8px;
+    }
+    .back-btn:hover {
+        background: #777;
+    }
+    #message {
+        margin-top: 10px;
+        font-size: 14px;
+    }
+</style>
+</head>
+<body>
+
+<div class="box">
+    <h2>Upload Resource</h2>
+
+    <input type="text" id="title" placeholder="Title (e.g. Maths Unit 1 Notes)">
+    <input type="text" id="subject" placeholder="Subject (e.g. Maths)">
+    <input type="number" id="semester" placeholder="Semester (e.g. 3)">
+
+    <select id="resourceType">
+        <option value="notes">Notes</option>
+        <option value="pyq">PYQ</option>
+    </select>
+
+    <input type="number" id="year" placeholder="Year (only for PYQ, optional)">
+
+    <input type="file" id="file">
+
+    <button onclick="handleUpload()">Upload</button>
+    <button class="back-btn" onclick="window.location.href='resources.html'">Back to Resources</button>
+
+    <div id="message"></div>
+</div>
+
+<script>
+    const API_URL = "http://127.0.0.1:8080";
+
+    window.onload = function () {
+        const token = localStorage.getItem("token");
+        if (!token) {
+            alert("Please login first");
+            window.location.href = "login.html";
+        }
+    };
+
+    async function handleUpload() {
+        try {
+            const token = localStorage.getItem("token");
+            const messageBox = document.getElementById("message");
+
+            const title = document.getElementById("title").value;
+            const subject = document.getElementById("subject").value;
+            const semester = document.getElementById("semester").value;
+            const resourceType = document.getElementById("resourceType").value;
+            const year = document.getElementById("year").value;
+            const fileInput = document.getElementById("file");
+
+            if (!title || !subject || !semester || !fileInput.files[0]) {
+                messageBox.style.color = "red";
+                messageBox.innerText = "Please fill all required fields and choose a file.";
+                return;
+            }
+
+            // file upload ke liye FormData use karna padta hai (JSON nahi)
+            const formData = new FormData();
+            formData.append("title", title);
+            formData.append("subject", subject);
+            formData.append("semester", semester);
+            formData.append("resource_type", resourceType);
+            if (year) formData.append("year", year);
+            formData.append("file", fileInput.files[0]);
+
+            const response = await fetch(`${API_URL}/upload`, {
+                method: "POST",
+                headers: {
+                    "Authorization": "Bearer " + token   // login token bhej rahe hain
+                },
+                body: formData
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                messageBox.style.color = "green";
+                messageBox.innerText = "Uploaded successfully! Redirecting...";
+                setTimeout(() => {
+                    window.location.href = "resources.html";
+                }, 1000);
+            } else {
+                messageBox.style.color = "red";
+                messageBox.innerText = data.detail || "Upload failed";
+            }
+
+        } catch (error) {
+            alert("JS ERROR: " + error.message);
+        }
+    }
+</script>
+
+</body>
+</html>

@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Notes Platform - Resources</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        background: #f4f4f4;
+        margin: 0;
+        padding: 20px;
+    }
+    .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+    .filters {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+    }
+    input, select, button {
+        padding: 8px;
+        border-radius: 4px;
+        border: 1px solid #ccc;
+    }
+    button {
+        background: #4CAF50;
+        color: white;
+        border: none;
+        cursor: pointer;
+    }
+    button:hover {
+        background: #45a049;
+    }
+    .logout-btn {
+        background: #e74c3c;
+    }
+    .logout-btn:hover {
+        background: #c0392b;
+    }
+    .card {
+        background: white;
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 12px;
+        box-shadow: 0 0 5px rgba(0,0,0,0.1);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .card-info h3 {
+        margin: 0 0 5px 0;
+    }
+    .card-info p {
+        margin: 2px 0;
+        color: #555;
+        font-size: 14px;
+    }
+    .download-btn {
+        background: #2196F3;
+    }
+    .download-btn:hover {
+        background: #1976D2;
+    }
+</style>
+</head>
+<body>
+
+<div class="header">
+    <h2>📚 Notes & PYQ Platform</h2>
+    <div>
+        <button onclick="window.location.href='upload.html'">+ Upload Resource</button>
+        <button class="logout-btn" onclick="logout()">Logout</button>
+    </div>
+</div>
+
+<div class="filters">
+    <input type="number" id="semesterFilter" placeholder="Semester (e.g. 3)">
+    <input type="text" id="subjectFilter" placeholder="Subject (e.g. Maths)">
+    <select id="typeFilter">
+        <option value="">All Types</option>
+        <option value="notes">Notes</option>
+        <option value="pyq">PYQ</option>
+    </select>
+    <button onclick="loadResources()">Filter</button>
+    <button onclick="clearFilters()">Clear</button>
+</div>
+
+<div id="resourceList">
+    <!-- resources yaha JavaScript se add honge -->
+</div>
+
+<script>
+    const API_URL = "http://127.0.0.1:8080";
+
+    // page load hote hi resources fetch karo
+    window.onload = function () {
+        // check karo login hai ya nahi
+        const token = localStorage.getItem("token");
+        if (!token) {
+            alert("Please login first");
+            window.location.href = "login.html";
+            return;
+        }
+        loadResources();
+    };
+
+    function logout() {
+        localStorage.removeItem("token");
+        window.location.href = "login.html";
+    }
+
+    async function loadResources() {
+        const semester = document.getElementById("semesterFilter").value;
+        const subject = document.getElementById("subjectFilter").value;
+        const type = document.getElementById("typeFilter").value;
+
+        // URL mein query parameters jodo, sirf jo bhare hue hain
+        let url = `${API_URL}/resources?`;
+        if (semester) url += `semester=${semester}&`;
+        if (subject) url += `subject=${subject}&`;
+        if (type) url += `resource_type=${type}&`;
+
+        const response = await fetch(url);
+        const resources = await response.json();
+
+        const listDiv = document.getElementById("resourceList");
+        listDiv.innerHTML = "";
+
+        if (resources.length === 0) {
+            listDiv.innerHTML = "<p>No resources found.</p>";
+            return;
+        }
+
+        resources.forEach(res => {
+            const card = document.createElement("div");
+            card.className = "card";
+            card.innerHTML = `
+                <div class="card-info">
+                    <h3>${res.title}</h3>
+                    <p>Subject: ${res.subject} | Semester: ${res.semester}</p>
+                    <p>Type: ${res.resource_type} ${res.year ? "| Year: " + res.year : ""}</p>
+                </div>
+                <button class="download-btn" onclick="downloadResource(${res.id})">Download</button>
+            `;
+            listDiv.appendChild(card);
+        });
+    }
+
+    function clearFilters() {
+        document.getElementById("semesterFilter").value = "";
+        document.getElementById("subjectFilter").value = "";
+        document.getElementById("typeFilter").value = "";
+        loadResources();
+    }
+
+    function downloadResource(id) {
+        window.open(`${API_URL}/resources/${id}/download`, "_blank");
+    }
+</script>
+
+</body>
+</html>

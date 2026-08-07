@@ -100,9 +100,8 @@
             const fileInput = document.getElementById("file");
 
             if (!title || !subject || !semester || !fileInput.files[0]) {
-                messageBox.style.color = "red";
-                messageBox.innerText = "Please fill all required fields and choose a file.";
-                return;
+               alert("title=" + title + " | subject=" + subject + " | semester=" + semester + " | file=" + fileInput.files[0]);
+               return;
             }
 
             // file upload ke liye FormData use karna padta hai (JSON nahi)

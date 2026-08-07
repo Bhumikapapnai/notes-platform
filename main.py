@@ -93,9 +93,12 @@ def upload_resource(
 ):
     # file ko seedha Cloudinary pe upload karo (local save nahi karna ab)
     upload_result = cloudinary.uploader.upload(
-        file.file,
-        resource_type="raw",   # PDF/documents ke liye "raw" use hota hai
-        folder="notes_platform"
+         file.file,
+         resource_type="raw",
+         folder="notes_platform",
+         public_id=file.filename,
+         use_filename=True,
+       unique_filename=False
     )
 
     file_url = upload_result["secure_url"]  # yeh Cloudinary ka permanent link hai

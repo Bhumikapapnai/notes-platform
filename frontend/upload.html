@@ -100,8 +100,14 @@
             const fileInput = document.getElementById("file");
 
             if (!title || !subject || !semester || !fileInput.files[0]) {
-               alert("title=" + title + " | subject=" + subject + " | semester=" + semester + " | file=" + fileInput.files[0]);
-               return;
+                messageBox.style.color = "red";
+                messageBox.innerText = "Please fill all required fields and choose a file.";
+                return;
+            }
+            if (fileInput.files[0].size > 10 * 1024 * 1024) {  // 10 MB in bytes
+                messageBox.style.color = "red";
+                messageBox.innerText = "File size should be under 10 MB.";
+                return;
             }
 
             // file upload ke liye FormData use karna padta hai (JSON nahi)
